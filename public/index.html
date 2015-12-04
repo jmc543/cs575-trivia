@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!-- Justin Carbonara (jmc543) CS575 -->
+<!-- Assign angular module: -->
+<html ng-app="cs575Trivia">
+<head>
+    <!-- META -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Optimize mobile viewport (html5)-->
+
+    <title>CS575 Trivia SPA</title>
+
+    <!-- import bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-7s5uDGW3AHqw6xtJmNNtr+OBRJUlgkNJEo78P4b0yRw= sha512-nNo+yCHEyn0smMxSswnf/OnX6/KwJuZTlNZBjauKhTK0c+zT+q5JOCx0UFhXQ6rJR9jg6Es8gPuD2uZcYDLqSw==" crossorigin="anonymous">
+    <style>
+        html                    { overflow-y:scroll; }
+        body                    { padding-top:10px; }
+        #trivia-section         { margin-bottom:30px; }
+        IMG.img-centered        { display: block;
+                                  max-width:100%;
+                                  max-height:100% }
+    </style>
+
+    <!-- import scripts: -->
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script><!-- load jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script><!-- load angular -->
+    <script src="app.js"></script> <!-- plug in the angular script for the SPA -->
+
+    <!-- prevent enter key from submitting forms: -->
+    <script type="text/javascript">
+        function noenter() {
+            return !(window.event && window.event.keyCode == 13); }
+    </script>
+</head>
+
+<!-- Set up the controller, grab initial data -->
+<body ng-controller="cs575TriviaController">
+    <div class="{{active}} container">
+
+        <!-- Header items: -->
+        <div class="jumbotron text-center" ng-show="active == 'about' || active === undefined">
+            <h1>Let's Play Trivia! <a href="https://en.wikipedia.org/wiki/Single-page_application" target="_blank">SPA</a></h1>
+            <h2>Now with {{questions.length}} trivia questions!</h2>
+        </div>
+        <div ng-hide="!active || active == 'about'" class="text-center">
+            <h3 style="background-color:lightgray">Let's Play Trivia!<br>Now with {{questions.length}} trivia questions!</h3>
+        </div>
+
+        <!-- Menu to choose between guessing trivia and creating -->
+        <nav class="btn-group btn-group-justified">
+            <!-- Set 'active' variable depending on menu selection -->
+            <a href="#" class="play btn btn-primary" ng-click="active='play'; randomTriviaQ();">Play</a>
+            <a href="#" class="create btn btn-primary" ng-click="active='create'">Create</a>
+            <a href="#" class="view_all btn btn-primary" ng-click="active='view_all'">Remove</a>
+            <a href="#" class="about btn btn-primary" ng-click="active='about'">About</a>
+        </nav>
+        <!-- add empty area between menu and content -->
+        <p></p>
+        <!-- show hint before user presses any buttons: -->
+        <h2 ng-hide="active" class="text-center">Please click a menu item</h2>
+
+        <!-- trivia area, shown when "play" is selected -->
+        <div id="trivia-section" class="trivia-section" ng-if="active == 'play'">
+            <div class="{{selMade}} col-sm-4 col-sm-offset-4">
+                <div class="trivia-game">
+                    <!-- show a random question, followed by the choices: -->
+                    <h3>{{randomQuestion.question}}</h3>
+                    <label>
+                        <input type="radio" name="guess" ng-click="selMade='a'; $parent.answerIsSubmitted = false"> {{randomQuestion.optionA}}
+                    </label>
+                    <br>
+                    <label>
+                        <input type="radio" name="guess" ng-click="selMade='b'; $parent.answerIsSubmitted = false"> {{randomQuestion.optionB}}
+                    </label>
+                    <br>
+                    <label>
+                        <input type="radio" name="guess" ng-click="selMade='c'; $parent.answerIsSubmitted = false"> {{randomQuestion.optionC}}
+                    </label>
+                    <br>
+                    <label>
+                        <input type="radio" name="guess" ng-click="selMade='d'; $parent.answerIsSubmitted = false"> {{randomQuestion.optionD}}
+                    </label>
+                    <br>
+                    <!-- show button to check answer after guess is selected: -->
+                    <button ng-show="selMade" ng-click="verifyQuestion(randomQuestion, selMade)" ng-hide="answerIsCorrect">Check answer</button>
+                </div>
+                <h3 ng-show="answerIsCorrect && answerIsSubmitted">Correct!</h3>
+                <h3 ng-show="!answerIsCorrect && answerIsSubmitted">Wrong!</h3>
+                <br>
+                <!-- after answer is submitted, show button to user to load another question -->
+                <button ng-show="answerIsSubmitted" ng-click="randomTriviaQ()">Random question</button>
+            </div>
+            <br>
+            <!-- populate footer with trivia stats -->
+            <div class="trivia-footer col-sm-4 col-sm-offset-4" ng-show="numAnswered > 0">Stats: {{numCorrect}} out of {{numAnswered}}, {{numCorrect / numAnswered * 100 | number:0}}%
+                <button ng-click="$parent.numCorrect=0; $parent.numAnswered=0">Reset stats</button>
+            </div>
+        </div>
+
+        <!-- form to create new trivia questions, shown when "create" is selected -->
+        <div id="trivia-create-form" ng-if="active == 'create'">
+            <div class="col-sm-8 col-sm-offset-2 text-center">
+                <form>
+                    <div class="form-group">
+                        <input id="userQuestion" type="text" class="form-control input-lg text-center" ng-model="$parent.newTriviaForm.question" placeholder="Enter question" onkeypress="return noenter()">
+                        <input type="text" class="form-control input-lg text-center" ng-model="$parent.newTriviaForm.optionA" placeholder="Enter choice A" onkeypress="return noenter()">
+                        <input type="text" class="form-control input-lg text-center" ng-model="$parent.newTriviaForm.optionB" placeholder="Enter choice B" onkeypress="return noenter()">
+                        <input type="text" class="form-control input-lg text-center" ng-model="$parent.newTriviaForm.optionC" placeholder="Enter choice C" onkeypress="return noenter()">
+                        <input type="text" class="form-control input-lg text-center" ng-model="$parent.newTriviaForm.optionD" placeholder="Enter choice D" onkeypress="return noenter()">
+                        <Label> Choose the answer:</Label>
+                        <label>
+                            <input type="radio" name="ansToQ" ng-click="$parent.newTriviaForm.answer='a'">A &nbsp;
+                        </label>
+                        <label>
+                            <input type="radio" name="ansToQ" ng-click="$parent.newTriviaForm.answer='b'">B &nbsp;
+                        </label>
+                        <label>
+                            <input type="radio" name="ansToQ" ng-click="$parent.newTriviaForm.answer='c'">C &nbsp;
+                        </label>
+                        <label>
+                            <input type="radio" name="ansToQ" ng-click="$parent.newTriviaForm.answer='d'">D
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" ng-click="createTriviaQuestion()" ng-show="$parent.newTriviaForm.question && $parent.newTriviaForm.optionA && $parent.newTriviaForm.optionB && $parent.newTriviaForm.optionC && $parent.newTriviaForm.optionD && $parent.newTriviaForm.answer">Add Trivia</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- this area will be displayed when "remove" is clicked, this is where deletion occurs -->
+        <div id="view-all-area" ng-if="active == 'view_all'" class="col-sm-8 col-sm-offset-2">
+            <label class="text-center">Click checkbox to delete question from database. Most recent entries are listed first.</label>
+            <div ng-repeat="question in questions | orderBy:'question._id':true | startFrom:currentPage*numToDisplay | limitTo:numToDisplay">
+                <label>
+                    <input type="checkbox" ng-click="deleteTriviaQuestion(question._id)"> {{question.question}}
+                </label>
+            </div>
+            <button ng-disabled="currentPage <= 0" ng-click="currentPage=currentPage-1"><<</button>
+            <button ng-disabled="currentPage >= $parent.numberOfPages()" ng-click="currentPage=currentPage+1">>></button>
+            <label>Page {{currentPage+1}} of {{$parent.numberOfPages()}}</label>
+        </div>
+
+        <!-- this area will be displayed when "about" is selected -->
+        <div id="about-area" ng-if="active == 'about'">
+            <div class="col-sm-4 col-sm-offset-4">
+                <p class="text-center">This single-page application was created to explore some of the concepts that were discussed in CS575. Here are some of the technologies used in this project:</p>
+                <a href="https://www.mongodb.org/" target="_blank"><img src="/img/MongoDB.png" alt="mongodb-logo" class="img-centered"></a>
+                <a href="http://expressjs.com/en/index.html" target="_blank"><img src="/img/Expressjs.png" alt="expressjs-logo" class="img-centered"></a>
+                <a href="https://angularjs.org/" target="_blank"><img src="/img/AngularJS.png" alt="angularjs-logo" class="img-centered"></a>
+                <a href="https://nodejs.org/en/" target="_blank"><img src="/img/Nodejs.png" alt="nodejs-logo" class="img-centered"><br></a>
+                <a href="http://getbootstrap.com/" target="_blank"><img src="/img/Bootstrap.png" alt="bootstrap-logo" class="img-centered"><br></a>
+                <a href="https://jquery.com/" target="_blank"><img src="/img/JQuery.png" alt="jquery-logo" class="img-centered"></a><br>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

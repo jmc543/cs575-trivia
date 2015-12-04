@@ -1,0 +1,16 @@
+{
+  "name": "cs575-trivia",
+  "version": "0.0.1",
+  "description": "Trivia SPA for CS575",
+  "main": "server.js",
+  "author": "jmc543",
+  "dependencies": {
+    "express": "4.13.x",
+    "node-json-db": "0.5.x",
+    "morgan": "1.6.x",
+    "body-parser": "1.14.x",
+    "method-override": "2.3.x",
+    "underscore": "1.8.x",
+    "mongoose": "4.2.x"
+  }
+}
